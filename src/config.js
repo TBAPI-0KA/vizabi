@@ -16,6 +16,7 @@ require.config({
         d3axisWithLabelPicker: '../src/base/d3.axisWithLabelPicker',
         d3collisionResolver: '../src/base/d3.collisionResolver',
         d3colorPicker: '../src/base/d3.colorPicker',
+        d3worldMap: "../src/base/d3.worldMap",
         lodash: '../lib/lodash/dist/lodash',
         text: '../lib/requirejs-text/text',
         stacktrace: '../lib/stacktrace-js/dist/stacktrace',

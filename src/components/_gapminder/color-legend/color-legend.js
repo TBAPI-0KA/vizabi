@@ -3,6 +3,7 @@ define([
     'd3',
     'base/component',
     'd3colorPicker',
+    'd3worldMap'
 ], function(d3, Component) {
 
     var INDICATOR = "value";
@@ -59,10 +60,14 @@ define([
         domReady: function() {
             var _this = this;
             this.listColorsEl = this.element.append("div").attr("class", "vzb-cl-colorList");
-            this.rainbow = this.listColorsEl.append("div").attr("class", "vzb-cl-rainbow");
+            this.rainbowEl = this.listColorsEl.append("div").attr("class", "vzb-cl-rainbow");
+            this.worldmapEl = this.listColorsEl.append("div").attr("class", "vzb-cl-worldmap");
             
             this.colorPicker = d3.svg.colorPicker();
             this.element.call(this.colorPicker);
+            
+            this.worldMap = d3.svg.worldMap();
+            this.worldmapEl.call(this.worldMap);
         },
         
 
@@ -123,12 +128,25 @@ define([
             
             
             if(this.model.color.use == "indicator"){
-                
-                this.rainbow.classed("vzb-hidden", false)
+                this.rainbowEl.classed("vzb-hidden", false)
                     .style("height", (_.keys(paletteDefault).length * 25 + 5) + "px")
                     .style("background", "linear-gradient(" + _.values(palette._data).join(", ") +")");
             }else{
-                this.rainbow.classed("vzb-hidden", true);
+                this.rainbowEl.classed("vzb-hidden", true);
+            }
+            
+            if(this.model.color.value == "geo.region"){
+                var regions = this.worldmapEl.classed("vzb-hidden", false)
+                    .select("svg").selectAll("g");
+                regions.each(function(){
+                    var view = d3.select(this);
+                    var color = palette[view.attr("id")];
+                    view.selectAll("path").style("fill",color);
+                })
+                colors.classed("vzb-hidden", true);
+            }else{
+                this.worldmapEl.classed("vzb-hidden", true);
+                colors.classed("vzb-hidden", false);
             }
             
             colors.each(function(d, index){
