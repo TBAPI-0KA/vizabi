@@ -91,6 +91,9 @@ define([
             }
         },
         
+        
+        // a custom label offset needs to be saved in model to be reflected in state
+        // so that the chart can be sent over as a link with labels at their exact places
         setLabelOffset: function(d, xy) {
             var dimension = this.getDimension();
             var value = d[dimension];
@@ -126,6 +129,11 @@ define([
 
         //TODO: join the following 3 methods with the previous 3
 
+        
+        setHighlighted: function(arg){
+            this.brush = [].concat(arg);
+        },
+        
         /**
          * Highlights an entity from the set
          */

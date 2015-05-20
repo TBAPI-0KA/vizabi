@@ -19,7 +19,7 @@ define([
             },{
                 component: '_gapminder/color-legend',
                 placeholder: '.vzb-clegend-container',
-                model: ["state.marker.color", "language"]
+                model: ["state.marker.color", "state.entities", "language"]
             }];
             
             

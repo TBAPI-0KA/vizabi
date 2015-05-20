@@ -25,6 +25,9 @@ define([
                 name: "color",
                 type: "color"
             },{
+                name: "entities",
+                type: "entities"
+            },{
                 name: "language",
                 type: "language"
             }];
@@ -142,6 +145,27 @@ define([
                     var view = d3.select(this);
                     var color = palette[view.attr("id")];
                     view.selectAll("path").style("fill",color);
+                })
+                .on("mouseover", function(){
+                    var view = d3.select(this);
+                    var region = view.attr("id");
+                    view.selectAll("path")
+                        .style("stroke","black")
+                        .style("stroke-width",2);
+                    
+                    
+                    //TODO: accessing _items is an ugly hack. should be optimised later
+                    var highlight = _.uniq(_this.model.color._items
+                           .filter(function(f){return f["geo.region"]==region})
+                           .map(function(d){return {geo: d.geo}}), 
+                    function(u){return u.geo});
+                    
+                    _this.model.entities.setHighlighted(highlight);
+                })
+                .on("mouseout", function(){
+                    var view = d3.select(this);
+                    view.selectAll("path").style("stroke","none");
+                    _this.model.entities.clearHighlighted();
                 })
                 colors.classed("vzb-hidden", true);
             }else{

@@ -1,10 +1,9 @@
-//FIX ME: Use req instead of jquery
-
 define([
-    //'jquery',
+    'q',
+    'req',
     'lodash',
     'base/class'
-], function(/* $, */ _, Class) {
+], function(Q, req, _, Class) {
 
     var LocalJSONReader = Class.extend({
 
@@ -26,7 +25,7 @@ define([
          */
         read: function(queries, language) {
             var _this = this,
-                defer = $.Deferred(),
+                defer = Q.defer(),
                 promises = [];
 
             //this specific reader has support for the tag {{LANGUAGE}}
@@ -40,7 +39,7 @@ define([
 
                 (function(order) {
                     var query = queries[i];
-                    var promise = $.getJSON(path, function(res) {
+                    var promise = req(path, function(res) {
 
                             //TODO: Improve local json filtering
                             var data = res[0];
@@ -97,7 +96,7 @@ define([
                 })(i);
             }
 
-            $.when.apply(null, promises).done(function() {
+            Q(null, promises).done(function() {
                 defer.resolve();
             });
 

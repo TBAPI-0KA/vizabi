@@ -62,7 +62,7 @@ function mapParameter(model, par) {
     var map = {};
     for (var i in model._data) {
         var submodel = model._data[i];
-        if (typeof submodel._id === "undefined") continue;
+        if (submodel == null || (typeof submodel._id === "undefined")) continue;
         map[i] = {};
         map[i] = mapParameter(submodel, par);
         map[i][par] = submodel[par];

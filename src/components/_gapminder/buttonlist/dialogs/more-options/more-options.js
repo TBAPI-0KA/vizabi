@@ -44,7 +44,7 @@ define([
             },{
                 component: '_gapminder/color-legend',
                 placeholder: '.vzb-clegend-container',
-                model: ["state.marker.color", "language"]
+                model: ["state.marker.color", "state.entities", "language"]
             },{
                 component: '_gapminder/bubble-opacity',
                 placeholder: '.vzb-dialog-bubble-opacity',

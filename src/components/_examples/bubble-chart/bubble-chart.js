@@ -1333,7 +1333,7 @@ define([
 
             this.updateBubbleOpacity();
 
-            if(this.someHighlighted){
+            if(this.model.entities.brush.length === 1){
                 var d = _.clone(this.model.entities.brush[0]); 
                 
                 if(_this.model.time.lockNonSelected && _this.someSelected && !_this.model.entities.isSelected(d)){
@@ -1353,7 +1353,7 @@ define([
             //if(!duration)duration = 0;
             
             var OPACITY_HIGHLT = 1.0;
-            var OPACITY_HIGHLT_DIM = 0.6;
+            var OPACITY_HIGHLT_DIM = 0.5;
             var OPACITY_SELECT = 0.8;
             var OPACITY_REGULAR = 0.8;
             var OPACITY_SELECT_DIM = Math.min(OPACITY_REGULAR, this.model.entities.opacityNonSelected);

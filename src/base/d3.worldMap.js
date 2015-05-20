@@ -349,10 +349,22 @@ define(['d3'], function(d3){
 </g> \
 </svg> \
 '
+
             
             function worldMap(container) {
                 container.selectAll("svg").remove();
                 container.html(world);
+                container.selectAll("g").each(function(){
+                    var g = d3.select(this);
+                    var region = g.attr("id");
+                    g.selectAll("path")
+                        .datum(function(){
+                            return {
+                                "geo.name": d3.select(this).attr("id"), 
+                                "geo.region": region, 
+                            }
+                        })
+                })
             };
             
             return worldMap;
