@@ -1,9 +1,9 @@
 define([
     'q',
-    'req',
+    'd3',
     'lodash',
     'base/class'
-], function(Q, req, _, Class) {
+], function(Q, d3, _, Class) {
 
     var LocalJSONReader = Class.extend({
 
@@ -38,69 +38,71 @@ define([
                 this._data[i] = {};
 
                 (function(order) {
-                    var query = queries[i];
-                    var promise = req(path, function(res) {
+                    var query = queries[order];
+                    
+                    var promise = Q.defer();
+                    
+                    d3.json(path, function(error, res) {
+                        if (error) return console.log("Error Happened While Loading File: " + path, error);
+                    
+                        //TODO: Improve local json filtering
+                        var data = res[0];
 
-                            //TODO: Improve local json filtering
-                            var data = res[0];
+                        for (var filter in query.where) {
+                            var wanted = query.where[filter];
 
-                            for (var filter in query.where) {
-                                var wanted = query.where[filter];
-
-                                if (wanted[0] === "*") {
-                                    continue;
-                                }
-
-                                //if not time, normal filtering
-                                if (filter !== "time") {
-                                    data = _.filter(data, function(row) {
-                                        var val = row[filter],
-                                            found = -1;
-                                        //normalize
-                                        if (!_.isArray(val)) {
-                                            val = [val];
-                                        }
-                                        //find first occurence
-                                        var found = _.findIndex(val, function(j) {
-                                            return wanted.indexOf(j) !== -1;
-                                        });
-
-                                        //if found, include
-                                        return found !== -1;
-                                    });
-                                }
-                                //in case it's time, special filtering
-                                else {
-                                    var timeRange = wanted[0],
-                                        min = timeRange[0],
-                                        max = timeRange[1] || min;
-
-                                    data = _.filter(data, function(row) {
-                                        var val = row[filter]
-                                        return val >= min && val <= max;
-                                    });
-                                }
+                            if (wanted[0] === "*") {
+                                continue;
                             }
 
-                            //only selected items get returned
-                            data = _.map(data, function(row) {
-                                return _.pick(row, query.select);
-                            })
+                            //if not time, normal filtering
+                            if (filter !== "time") {
+                                data = _.filter(data, function(row) {
+                                    var val = row[filter];
+                                    var found = -1;
+                                    
+                                    //normalize
+                                    if (!_.isArray(val)) val = [val];
+                                    
+                                    //find first occurence
+                                    var found = _.findIndex(val, function(j) {
+                                        return wanted.indexOf(j) !== -1;
+                                    });
 
-                            _this._data[order] = data;
-                        })
-                        .error(function() {
-                            console.log("Error Happened While Loading File: " + path);
-                        });
-                    promises.push(promise);
+                                    //if found, include
+                                    return found !== -1;
+                                });
+                            }
+                            //in case it's time, special filtering
+                            else {
+                                var timeRange = wanted[0],
+                                    min = timeRange[0],
+                                    max = timeRange[1] || min;
+
+                                data = _.filter(data, function(row) {
+                                    var val = row[filter]
+                                    return val >= min && val <= max;
+                                });
+                            }
+                            
+                        }
+
+                        //only selected items get returned
+                        data = _.map(data, function(row) { return _.pick(row, query.select); })
+                        
+                        _this._data[order] = data;
+                        
+                        promise.resolve();
+                    });
+                    promises.push(promise.promise);
                 })(i);
             }
 
-            Q(null, promises).done(function() {
+            Q.all(promises).then(function() {
                 defer.resolve();
             });
 
-            return defer;
+            return defer.promise;
         },
 
         /**

@@ -21,7 +21,7 @@ describe("* Example Bubble Chart", function() {
                     dim: "geo",
                     filter: {
                         "geo": ['swe', 'nor', 'fin', 'bra', 'usa', 'chn', 'jpn', 'zaf', 'ind', 'ago'],
-                        "geo.category": ["country"]
+                        "geo.cat": ["country"]
                     }
                 }
             },
@@ -29,9 +29,9 @@ describe("* Example Bubble Chart", function() {
 
         //where do we get data from?
         data: {
-            reader: "waffle-server",            
-            //reader: 'local-json',
-            //path: 'local_data/waffles/{{LANGUAGE}}/basic-indicators.json'
+            //reader: "waffle-server",            
+            reader: 'local-json',
+            path: 'local_data/waffles/{{LANGUAGE}}/basic-indicators.json'
         }
     };
 

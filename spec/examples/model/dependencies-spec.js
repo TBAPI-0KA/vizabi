@@ -146,7 +146,7 @@ describe("* Model Dependencies", function() {
                             dim: "geo",
                             filter: {
                                 "geo": ['swe', 'nor', 'fin'],
-                                "geo.category": ["country"]
+                                "geo.cat": ["country"]
                             }
                         }
                     },
