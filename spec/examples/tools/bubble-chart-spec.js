@@ -21,42 +21,17 @@ describe("* Example Bubble Chart", function() {
                     dim: "geo",
                     filter: {
                         "geo": ['swe', 'nor', 'fin', 'bra', 'usa', 'chn', 'jpn', 'zaf', 'ind', 'ago'],
-                        "geo.cat": ["country"]
+                        "geo.category": ["country"]
                     }
                 }
             },
-
-            //how we show it
-            marker: {
-                dimensions: ["entities", "time"],
-                type: "geometry",
-                shape: "circle",
-                label: {
-                    hook: "property",
-                    value: "geo.name"
-                },
-                axis_y: {
-                    hook: "indicator",
-                    value: "lex",
-                    scale: 'linear'
-                },
-                axis_x: {
-                    hook: "indicator",
-                    value: "gdp_per_cap",
-                    scale: 'linear'
-                },
-                size: {
-                    hook: "indicator",
-                    value: "pop",
-                    scale: 'log'
-                }
-            }
         },
 
         //where do we get data from?
         data: {
-            reader: 'local-json',
-            path: 'local_data/waffles/{{LANGUAGE}}/basic-indicators.json'
+            reader: "waffle-server",            
+            //reader: 'local-json',
+            //path: 'local_data/waffles/{{LANGUAGE}}/basic-indicators.json'
         }
     };
 

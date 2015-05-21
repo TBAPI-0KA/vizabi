@@ -146,26 +146,40 @@ define([
                     var color = palette[view.attr("id")];
                     view.selectAll("path").style("fill",color);
                 })
+                .style("opacity", 0.8)
                 .on("mouseover", function(){
                     var view = d3.select(this);
                     var region = view.attr("id");
-                    view.selectAll("path")
-                        .style("stroke","black")
-                        .style("stroke-width",2);
+                    regions.selectAll("path").style("opacity",0.5);
+                    view.selectAll("path").style("opacity",1);
                     
                     
-                    //TODO: accessing _items is an ugly hack. should be optimised later
-                    var highlight = _.uniq(_this.model.color._items
-                           .filter(function(f){return f["geo.region"]==region})
-                           .map(function(d){return {geo: d.geo}}), 
-                    function(u){return u.geo});
+                    //TODO: accessing _filtered is an ugly hack. should be optimised later
+                    var highlight = _.values(_this.model.color._filtered)
+                        //returns a function over time. pick the last time-value
+                        .map(function(d){return d[d.length-1]})
+                        //filter so that only countries of the correct region remain 
+                        .filter(function(f){return f["geo.region"]==region})
+                        //fish out the "geo" field, leave the rest behind
+                        .map(function(d){return {geo: d.geo}});
                     
                     _this.model.entities.setHighlighted(highlight);
                 })
                 .on("mouseout", function(){
+                    regions.selectAll("path").style("opacity",0.8);
+                    _this.model.entities.clearHighlighted(); 
+                })
+                .on("click", function(d){
+                    //disable interaction if so stated in metadata
+                    if(!_this.model.color.isUserSelectable(whichPalette)) return;
                     var view = d3.select(this);
-                    view.selectAll("path").style("stroke","none");
-                    _this.model.entities.clearHighlighted();
+                    var region = view.attr("id")
+                    
+                    _this.colorPicker
+                        .colorOld(palette[region])
+                        .colorDef(paletteDefault[region])
+                        .callback(function(value){_this.model.color.setColor(value, region)})
+                        .show(true);
                 })
                 colors.classed("vzb-hidden", true);
             }else{
