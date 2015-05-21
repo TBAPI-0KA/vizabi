@@ -4,16 +4,7 @@ define([
     'models/hook'
 ], function(d3, _, Hook) {
 
-    //constant time formats
-    var time_formats = {
-        "year": d3.time.format("%Y"),
-        "month": d3.time.format("%Y-%m"),
-        "week": d3.time.format("%Y-W%W"),
-        "day": d3.time.format("%Y-%m-%d"),
-        "hour": d3.time.format("%Y-%m-%d %H"),
-        "minute": d3.time.format("%Y-%m-%d %H:%M"),
-        "second": d3.time.format("%Y-%m-%d %H:%M:%S")
-    };
+
 
     var Axis = Hook.extend(   {
 
@@ -55,20 +46,7 @@ define([
 
             //TODO: add min and max to validation
         },
-        /**
-         * Gets tick values for this hook
-         * @returns {Number|String} value The value for this tick
-         */
-        tickFormatter: function(x) {
-            var result = x;
-            if(_.isDate(x)) {
-                //TODO: generalize for any time unit
-                result = time_formats["year"](x);
-            }else if (this.use == "indicator") {
-                result = parseFloat(x);
-            }
-            return result;
-        },
+
 
         /**
          * Gets the domain for this hook
