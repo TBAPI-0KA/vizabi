@@ -28,7 +28,7 @@ define([
                 component: '_gapminder/buttonlist',
                 placeholder: '.vzb-tool-buttonlist',
                 model: ['state', 'ui', 'language'],
-                buttons: ['more-options', 'find', 'trails', 'lock', 'size', 'colors', 'axes', 'fullscreen']
+                buttons: ['more-options', 'find', 'axes', 'size', 'colors', 'fullscreen', 'trails', 'lock']
             }];
 
             //default options
@@ -272,14 +272,6 @@ define([
                                     "scaletype/genericLog": "Generic log",
                                     "scaletype/time": "Time",
                                     "scaletype/ordinal": "Ordinal",
-                                    "color/lex/0": "Bad",
-                                    "color/lex/1": "Medium",
-                                    "color/lex/2": "Good",
-                                    "color/lex/3": "Very good",
-                                    "color/pop/0": "Little",
-                                    "color/pop/1": "Medium",
-                                    "color/pop/2": "Big",
-                                    "color/pop/3": "Super big",
                                     "color/geo.region/asi": "Asia",
                                     "color/geo.region/eur": "Europe",
                                     "color/geo.region/ame": "Americas",
@@ -311,14 +303,6 @@ define([
                                     "scaletype/genericLog": "Allmän log",
                                     "scaletype/time": "Tid",
                                     "scaletype/ordinal": "Ordning",
-                                    "color/lex/0": "Dålig",
-                                    "color/lex/1": "Lagom",
-                                    "color/lex/2": "Bra",
-                                    "color/lex/3": "Utmärkt",
-                                    "color/pop/0": "Liten",
-                                    "color/pop/1": "Lagom",
-                                    "color/pop/2": "Stor",
-                                    "color/pop/3": "Enorm",
                                     "geo.region/asi": "Asien",
                                     "geo.region/eur": "Europa",
                                     "geo.region/ame": "Amerikor",

@@ -121,8 +121,8 @@ define([
             
             button_list.forEach(function(d){
                 switch (d){
-                    case "trails": _this.setBubbleTrails(d); break;
-                    case "lock": _this.setBubbleLock(d); break;
+                    case "trails": _this.setBubbleTrails(); break;
+                    case "lock": _this.setBubbleLock(); break;
                 }
             })
         },
@@ -264,6 +264,8 @@ define([
             var all_btns = this.element.selectAll(".vzb-buttonlist-btn"),
                 all_dialogs = this.element.selectAll(".vzb-buttonlist-dialog");
             all_btns.classed(class_active, false);
+            this.setBubbleTrails();
+            
             all_dialogs.classed(class_active, false);
 
             //call component close function
@@ -275,12 +277,14 @@ define([
 
         toggleBubbleTrails: function(id) {
             this.model.state.time.trails = !this.model.state.time.trails;
-            this.setBubbleTrails(id);
+            this.setBubbleTrails();
         },
-        setBubbleTrails: function(id, trails) {
+        setBubbleTrails: function() {
+            var id = "trails";
             var btn = this.element.selectAll(".vzb-buttonlist-btn[data-btn='" + id + "']");
             
             btn.classed(class_active, this.model.state.time.trails);
+            btn.style("display", this.model.state.entities.select.length == 0? "none": "inline-block")
         },
         toggleBubbleLock: function(id) {
             if(this.model.state.entities.select.length == 0) return;
@@ -290,15 +294,17 @@ define([
             locked = locked?0:timeFormatter(this.model.state.time.value);
             this.model.state.time.lockNonSelected = locked;
             
-            this.setBubbleLock(id);
+            this.setBubbleLock();
         },
-        setBubbleLock: function(id) {
+        setBubbleLock: function() {
+            var id = "lock";
             var btn = this.element.selectAll(".vzb-buttonlist-btn[data-btn='" + id + "']");
             var translator = this.model.language.getTFunction();
             
             var locked = this.model.state.time.lockNonSelected;
             
             btn.classed(class_unavailable, this.model.state.entities.select.length == 0);
+            btn.style("display", this.model.state.entities.select.length == 0? "none": "inline-block")
             
             btn.classed(class_active, locked)
             btn.select(".vzb-buttonlist-btn-title")
