@@ -102,29 +102,43 @@ define([
             
             this.model_binds = {
                 "readyOnce": function(evt) {
-                    _this.startup(config.buttons);
+                    _this.setBubbleTrails();
+                    _this.setBubbleLock();
                 },
                 "change:state:entities:select": function() {
                     if(_this.model.state.entities.select.length == 0){
                         _this.model.state.time.lockNonSelected = 0;
                     }
-                    _this.startup(config.buttons);
+                    _this.setBubbleTrails();
+                    _this.setBubbleLock();
+                    
+                    
+                    //scroll button list to end if bottons appeared or disappeared
+                    if(_this.EntitiesSelected_1 !== (_this.model.state.entities.select.length>0)){
+                        _this.scrollToEnd();
+                    }
+                    _this.EntitiesSelected_1 = _this.model.state.entities.select.length>0;
                 }
             }
 
             this._super(config, context);
 
         },
+
         
-        startup: function(button_list){
-            var _this = this;
+        scrollToEnd: function(){
+            var buttonContainerEl = this.element.select(".vzb-buttonlist-container-buttons");
+            var target = 0;
+
+            var parent = d3.select(".vzb-tool");
             
-            button_list.forEach(function(d){
-                switch (d){
-                    case "trails": _this.setBubbleTrails(); break;
-                    case "lock": _this.setBubbleLock(); break;
-                }
-            })
+            if(parent.classed("vzb-portrait") && parent.classed("vzb-small") ){
+                if(this.model.state.entities.select.length>0) target = buttonContainerEl[0][0].scrollWidth
+                buttonContainerEl[0][0].scrollLeft = target;
+            }else{
+                if(this.model.state.entities.select.length>0) target = buttonContainerEl[0][0].scrollHeight
+                buttonContainerEl[0][0].scrollTop = target;
+            }
         },
 
         /*
