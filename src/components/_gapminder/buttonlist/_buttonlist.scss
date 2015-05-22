@@ -16,7 +16,6 @@ $vzb-button-color-border: #cce6ed;
     @import '../simple-checkbox/simple-checkbox';
     @include position(absolute, 0px);
 
-
     &::-webkit-scrollbar {display: none;}
     
     text-align: center;
@@ -131,9 +130,9 @@ $vzb-button-color-border: #cce6ed;
 }
 
 &.vzb-landscape{
-    .vzb-buttonlist {white-space: normal; overflow-x: hidden; overflow-y: scroll;}
+    .vzb-buttonlist {white-space: normal;}
 }
 &.vzb-portrait{
-    .vzb-buttonlist {white-space: nowrap; overflow-x: scroll; overflow-y: hidden;}
+    .vzb-buttonlist {white-space: nowrap; }
 }
    
