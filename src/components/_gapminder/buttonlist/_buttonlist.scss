@@ -7,6 +7,7 @@ $vzb-button-color: $vzb-color-primary-dark;
 $vzb-button-color-title: #9FBBC1;
 $vzb-button-color-title-active: $vzb-button-color;
 $vzb-button-color-border: #cce6ed;
+
 .vzb-buttonlist {
     @import '../bubble-size/bubble-size';
     @import '../indicator-picker/indicator-picker';
@@ -14,7 +15,9 @@ $vzb-button-color-border: #cce6ed;
     @import '../color-legend/color-legend';
     @import '../simple-checkbox/simple-checkbox';
     @include position(absolute, 0px);
-    white-space: normal;
+
+
+    &::-webkit-scrollbar {display: none;}
     
     text-align: center;
     .vzb-buttonlist-btn {
@@ -87,6 +90,9 @@ $vzb-button-color-border: #cce6ed;
     @import 'dialogs/dialog';
     
 }
+
+ 
+
 //responsiveness
 &.vzb-landscape, &.vzb-large {
     .vzb-buttonlist {
@@ -123,3 +129,11 @@ $vzb-button-color-border: #cce6ed;
         }
     }
 }
+
+&.vzb-landscape{
+    .vzb-buttonlist {white-space: normal; overflow-x: hidden; overflow-y: scroll;}
+}
+&.vzb-portrait{
+    .vzb-buttonlist {white-space: nowrap; overflow-x: scroll; overflow-y: hidden;}
+}
+   

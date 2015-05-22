@@ -961,9 +961,10 @@ define([
          * @returns {Number|String} value The value for this tick
          */
         tickFormatter: function(x, formatterRemovePrefix) {
-                    
+            
             //TODO: generalize for any time unit
             if(_.isDate(x)) return time_formats["year"](x);
+            if(_.isString(x)) return x;
 
             var format = "f";
             var prec = 0;

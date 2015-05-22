@@ -166,8 +166,10 @@ define([
             this.cScale = this.model.marker.color.getScale();
             this.cShadeScale = this.model.marker.color_shadow.getScale();
             
-            this.yAxis.tickSize(6, 0);
-            this.xAxis.tickSize(6, 0);
+            this.yAxis.tickSize(6, 0)
+                .tickFormat(this.model.marker.axis_y.tickFormatter);
+            this.xAxis.tickSize(6, 0)
+                .tickFormat(this.model.marker.axis_x.tickFormatter);
             
             this.collisionResolver = d3.svg.collisionResolver()
                 .selector(".vzb-lc-label")
