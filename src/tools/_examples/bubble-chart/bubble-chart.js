@@ -49,7 +49,7 @@ define([
                                 formatInput: "%Y",
                                 trails: true,
                                 lockNonSelected: 0,
-                                adaptMinMaxZoom: true
+                                adaptMinMaxZoom: false
                             }
                         },
                         //entities we want to show
