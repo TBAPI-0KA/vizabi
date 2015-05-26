@@ -1,10 +1,11 @@
 define([
     'd3',
     'base/component',
+    'components/_examples/bubble-chart/bubble-chart-trail',
     'd3genericLogScale',
     'd3axisWithLabelPicker',
     'd3collisionResolver'
-], function(d3, Component) {
+], function(d3, Component, Trail) {
 
     function _radiusToArea(r) {
         return r * r * Math.PI
@@ -38,7 +39,7 @@ define([
             this.model_binds = {
                 "change:time:trails": function(evt) {
                     //console.log("EVENT change:time:trails");
-                    _this.toggleTrails(_this.model.time.trails);
+                    _this._trails.toggle(_this.model.time.trails);
                     _this.redrawDataPoints();
                 },
                 "change:time:lockNonSelected": function(evt) {
@@ -54,26 +55,23 @@ define([
                     if(evt == "change:marker:size:max") return; 
                     if(evt.indexOf("change:marker:color:palette") > -1) return; 
                     //console.log("EVENT change:marker", evt);
+                    _this.updateUIStrings();
                     _this.updateIndicators();
                     _this.updateSize();
                     _this.updateMarkerSizeLimits();
-                    if(_this.model.time.trails && _this.someSelected){
-                        _this.cached = {};
-                        _this.createTrails();
-                        _this.resizeTrails();
-                        _this.revealTrails();
-                    }
-                    _this.resetZoomer();
+                    
+                    _this._trails.create();
+                    _this._trails.run("findVisible");
+                    _this.resetZoomer(); //does also redraw data points and trails resize
                     //_this.redrawDataPoints();
-                    _this.recolorTrails();
+                    _this._trails.run(["recolor", "reveal"]);
                 },
                 "change:entities:select": function() {
                     //console.log("EVENT change:entities:select");
                     _this.selectDataPoints();
                     _this.redrawDataPoints();
+                    _this._trails.run(["resize", "recolor", "findVisible", "reveal"]);
                     _this.updateBubbleOpacity();
-                    _this.resizeTrails();
-                    _this.revealTrails();
                 },
                 "change:entities:brush": function() {
                     //console.log("EVENT change:entities:brush");
@@ -81,6 +79,7 @@ define([
                 },
                 "readyOnce": function(evt) {
                     //console.log("EVENT ready once");
+                    _this.updateUIStrings();
                     _this.updateIndicators();
                     _this.updateEntities();
                     _this.updateTime();
@@ -88,10 +87,10 @@ define([
                     _this.updateMarkerSizeLimits();
                     _this.selectDataPoints();
                     _this.updateBubbleOpacity();
-                    _this.resetZoomer();
-                    //_this.redrawDataPoints();
-                    _this.resizeTrails();
-                    _this.revealTrails();
+                    _this._trails.create();
+                    
+                    _this.resetZoomer(); // includes redraw data points and trail resize
+                    _this._trails.run(["recolor","findVisible", "reveal"]);
                     if(_this.model.time.adaptMinMaxZoom) _this.adaptMinMaxZoom();
                 },
                 "ready": function(evt) {
@@ -108,12 +107,14 @@ define([
                     //console.log("EVENT change:time:value");
                     _this.updateTime();
                     
+                    
+                    _this._trails.run("findVisible");
                     if(_this.model.time.adaptMinMaxZoom) {
                         _this.adaptMinMaxZoom(); 
                     }else{
                         _this.redrawDataPoints();
                     }
-                    _this.revealTrails(null, _this.duration);
+                    _this._trails.run("reveal");
                 },
                 'change:time:adaptMinMaxZoom': function() {
                     //console.log("EVENT change:time:adaptMinMaxZoom");
@@ -126,8 +127,9 @@ define([
                 'change:marker:size:max': function() {
                     //console.log("EVENT change:marker:size:max");
                     _this.updateMarkerSizeLimits();
+                    _this._trails.run("findVisible");
                     _this.redrawDataPointsOnlySize();
-                    _this.resizeTrails();   
+                    _this._trails.run("resize");   
                 },
                 'change:marker:color:palette': function() {
                     //console.log("EVENT change:marker:color:palette");
@@ -172,7 +174,7 @@ define([
                 dragging: true
             }, this.ui.labels);
 
-
+            this._trails = Trail.call(this);
 
 
 //            this.collisionResolver = d3.svg.collisionResolver()
@@ -305,7 +307,7 @@ define([
                     _this.xAxisEl.call(_this.xAxis.labelerOptions(optionsX));
                     _this.yAxisEl.call(_this.yAxis.labelerOptions(optionsY));
                     _this.redrawDataPoints(_this.zoomer.duration);
-                    _this.resizeTrails(null, _this.zoomer.duration);
+                    _this._trails.run("resize", null, _this.zoomer.duration);
                     
                     _this.zoomer.duration = 0;
                 });
@@ -353,9 +355,8 @@ define([
                 //console.log("EVENT: resize");
                 _this.updateSize();
                 _this.updateMarkerSizeLimits();
-                _this.resetZoomer();
-                //_this.redrawDataPoints();
-                _this.resizeTrails();
+                _this._trails.run("findVisible");
+                _this.resetZoomer(); // includes redraw data points and trail resize
             })
 
             //keyboard listeners
@@ -379,6 +380,29 @@ define([
          * UPDATE INDICATORS
          */
         updateIndicators: function() {
+            var _this = this;
+
+            //scales
+            this.yScale = this.model.marker.axis_y.getScale();
+            this.xScale = this.model.marker.axis_x.getScale();
+            this.sScale = this.model.marker.size.getScale();
+            this.cScale = this.model.marker.color.getScale();
+
+//            this.collisionResolver.scale(this.yScale);
+
+
+            this.yAxis.tickFormat(_this.model.marker.axis_y.tickFormatter);
+            this.xAxis.tickFormat(_this.model.marker.axis_x.tickFormatter);
+            
+            this.xyMaxMinMean = {
+                x: this.model.marker.axis_x.getMaxMinMean(this.timeFormatter), 
+                y: this.model.marker.axis_y.getMaxMinMean(this.timeFormatter),
+                s: this.model.marker.size.getMaxMinMean(this.timeFormatter)
+            };
+        },
+
+
+        updateUIStrings: function(){
             var _this = this;
 
             this.translator = this.model.language.getTFunction();
@@ -417,28 +441,7 @@ define([
                 .text(this.translator("buttons/size") + ": " + titleStringS + ", " +
                     this.translator("buttons/colors") + ": " + titleStringC);
 
-
-            //scales
-            this.yScale = this.model.marker.axis_y.getScale();
-            this.xScale = this.model.marker.axis_x.getScale();
-            this.sScale = this.model.marker.size.getScale();
-            this.cScale = this.model.marker.color.getScale();
-
-//            this.collisionResolver.scale(this.yScale);
-
-
-            this.yAxis.tickFormat(_this.model.marker.axis_y.tickFormatter);
-            this.xAxis.tickFormat(_this.model.marker.axis_x.tickFormatter);
-            
-            this.xyMaxMinMean = {
-                x: this.model.marker.axis_x.getMaxMinMean(this.timeFormatter), 
-                y: this.model.marker.axis_y.getMaxMinMean(this.timeFormatter),
-                s: this.model.marker.size.getMaxMinMean(this.timeFormatter)
-            };
         },
-
-
-
 
 
         /*
@@ -758,7 +761,7 @@ define([
             
             if(this.someSelected){
                 _this.entityBubbles.each(function(d, index) {
-                    _this._updateBubble(d, index, d3.select(this), 0, true);
+                    _this._updateBubble(d, index, d3.select(this), 0);
                 });
             }else{
                 this.entityBubbles.each(function(d, index) {
@@ -783,7 +786,7 @@ define([
   
             this.entityBubbles.each(function(d, index) {
                 var view = d3.select(this);
-                _this._updateBubble(d, index, view, duration, false);
+                _this._updateBubble(d, index, view, duration);
 
             }); // each bubble
 
@@ -794,29 +797,19 @@ define([
 
 
             if (_this.ui.labels.autoResolveCollisions) {
-
                 // cancel previously queued simulation if we just ordered a new one
                 clearTimeout(_this.collisionTimeout);
 
                 // place label layout simulation into a queue
                 _this.collisionTimeout = setTimeout(function() {
-                    // if(_this.forceLayout == null) return;
-                    // 
-                    // // resume the simulation, fast-forward it, stop when done
-                    // _this.forceLayout.resume();
-                    // while(_this.forceLayout.alpha() > 0.01)_this.forceLayout.tick();
-                    // _this.forceLayout.stop();
-
-
                     //  _this.entityLabels.call(_this.collisionResolver.data(_this.cached));
-
                 }, _this.model.time.speed * 1.2)
             }
 
         }, //redraw Data Points
 
         
-        _updateBubble: function(d, index, view, duration, forseLabelOriginChange){
+        _updateBubble: function(d, index, view, duration){
             var _this = this;
             
             if(_this.model.time.lockNonSelected && _this.someSelected && !_this.model.entities.isSelected(d)){
@@ -849,15 +842,15 @@ define([
                     .attr("cx", _this.xScale(valueX))
                     .attr("r", scaledS)
 
-               _this._updateLabels(d, index, valueX, valueY, scaledS, valueL, duration, forseLabelOriginChange);
+               _this._updateLabel(d, index, valueX, valueY, scaledS, valueL, duration);
 
             } // data exists
         },
         
+
         
         
-        
-        _updateLabels: function(d, index, valueX, valueY, scaledS, valueL, duration, forseLabelOriginChange){
+        _updateLabel: function(d, index, valueX, valueY, scaledS, valueL, duration){
             var _this = this;
             if(duration==null) duration = _this.duration; 
             
@@ -866,6 +859,7 @@ define([
 
                 if (_this.cached[d.geo] == null) _this.cached[d.geo] = {};
                 var cached = _this.cached[d.geo];
+                
 
                 var select = _.find(_this.model.entities.select, function(f) {return f.geo == d.geo});
                 var trailStartTime = _this.timeFormatter.parse("" + select.trailStartTime);
@@ -873,22 +867,23 @@ define([
                 cached.valueX = valueX;
                 cached.valueY = valueY;
 
-                if (!_this.model.time.trails 
-                    || trailStartTime - _this.time > 0 || select.trailStartTime == null 
-                    || cached.labelX0==null || cached.labelY0 == null || cached.scaledS_atTrailOrigin == null) {
+                if (!_this.model.time.trails || trailStartTime - _this.time > 0 || select.trailStartTime == null) {
                     
                     select.trailStartTime = _this.timeFormatter(_this.time);
                     //the events in model are not triggered here. to trigger uncomment the next line
                     //_this.model.entities.triggerAll("change:select");
 
-                    cached.scaledS_atTrailOrigin = scaledS;
+                    cached.scaledS0 = scaledS;
                     cached.labelX0 = valueX;
                     cached.labelY0 = valueY;
                 }
                 
-                if(forseLabelOriginChange){
-                    cached.scaledS_atTrailOrigin = scaledS;
+                if(cached.scaledS0==null || cached.labelX0==null || cached.labelX0==null){
+                    cached.scaledS0 = scaledS;
+                    cached.labelX0 = valueX;
+                    cached.labelY0 = valueY;                
                 }
+                
 
                 // reposition label
                 _this.entityLabels.filter(function(f) {return f.geo == d.geo})
@@ -900,7 +895,7 @@ define([
                             .text(valueL + (_this.model.time.trails?" "+select.trailStartTime:""));
 
                         var line = labelGroup.select("line")
-                            .style("stroke-dasharray", "0 " + (cached.scaledS_atTrailOrigin + 2) + " 100%");
+                            .style("stroke-dasharray", "0 " + (cached.scaledS0 + 2) + " 100%");
 
                         var rect = labelGroup.select("rect");
 
@@ -925,8 +920,8 @@ define([
                                 .attr("ry", contentBBox.height*0.2);
                         }
 
-                        cached.labelX_ = select.labelOffset[0] || cached.scaledS_atTrailOrigin / _this.width;
-                        cached.labelY_ = select.labelOffset[1] || cached.scaledS_atTrailOrigin / _this.width;
+                        cached.labelX_ = select.labelOffset[0] || cached.scaledS0 / _this.width;
+                        cached.labelY_ = select.labelOffset[1] || cached.scaledS0 / _this.width;
 
                         var resolvedX = _this.xScale(cached.labelX0) + cached.labelX_ * _this.width;
                         var resolvedY = _this.yScale(cached.labelY0) + cached.labelY_ * _this.height;
@@ -940,7 +935,6 @@ define([
                         cached.stuckOnLimit = limitedX != resolvedX || limitedY != resolvedY;
 
                         rect.classed("vzb-transparent", !cached.stuckOnLimit);
-                        line.classed("vzb-transparent", cached.stuckOnLimit);
 
                         _this._repositionLabels(d, index, this, limitedX, limitedY, limitedX0, limitedY0, duration);
 
@@ -984,7 +978,7 @@ define([
 
             this.entityLabels.exit()
                 .each(function(d) {
-                    _this.removeTrails(d)
+                    _this._trails.run("remove", d);
                 })
                 .remove();
 
@@ -1024,7 +1018,7 @@ define([
                 
                     view.append("text").attr("class", "vzb-bc-label-x vzb-transparent").text("x");
 
-                    if (_this.model.time.trails) _this.createTrails(d);
+                    _this._trails.create(d);
                 })
                 .on("mousemove", function() {
                     d3.select(this).selectAll(".vzb-bc-label-x")
@@ -1040,228 +1034,12 @@ define([
                 });
 
 
-            //this._collisionResolverRebuild(_this.model.entities.select);
 
-        },
-
-        toggleTrails: function(toggle) {
-            var _this = this;
-            if (toggle) {
-                _this.createTrails();
-                _this.resizeTrails();
-                _this.revealTrails();
-            } else {
-                _this.removeTrails();
-                _this.model.entities.select.forEach(function(d) {
-                    d.trailStartTime = null;
-                });
-            }
-        },
-
-        createTrails: function(selection) {
-            var _this = this;
-            if(!this.model.time.trails || !this.model.entities.select.length) return;
-
-            var start = +_this.timeFormatter(_this.model.time.start);
-            var end = +_this.timeFormatter(_this.model.time.end);
-            var step = _this.model.time.step;
-            var timePoints = [];
-            for (var time = start; time <= end; time += step) timePoints.push(time);
-            
-            selection = selection == null ? _this.model.entities.select : [selection];
-
-            selection.forEach(function(d) {
-                
-                var trailSegmentData = timePoints.map(function(m){return {t: _this.timeFormatter.parse("" + m)} });
-
-                if (_this.cached[d.geo] == null) _this.cached[d.geo] = {};
-                _this.cached[d.geo].maxMinValues = {
-                    valueXmax: null,
-                    valueXmin: null,
-                    valueYmax: null,
-                    valueYmin: null,
-                    valueSmax: null
-                };
-
-                var maxmin = _this.cached[d.geo].maxMinValues;
-
-                var trail = _this.entityTrails
-                    .filter(function(f) {return f.geo == d.geo})
-                    .selectAll("g")
-                    .data(trailSegmentData);
-                
-                trail.exit().remove();
-                
-                trail.enter().append("g")
-                    .attr("class", "trailSegment")
-                    .on("mousemove", function(segment, index) {
-                        var geo = d3.select(this.parentNode).data()[0].geo;
-                        _this._axisProjections({ geo: geo, time: segment.t });
-                        _this._setTooltip(_this.timeFormatter(segment.t));
-                        _this.entityLabels
-                            .filter(function(f) {return f.geo == geo})
-                            .classed("vzb-highlighted", true);
-                    })
-                    .on("mouseout", function(segment, index) {
-                        _this._axisProjections();
-                        _this._setTooltip();
-                        _this.entityLabels.classed("vzb-highlighted", false);
-                    });
-                
-                trail.each(function(segment, index) {
-                        segment.valueY = _this.model.marker.axis_y.getValue({geo: d.geo,time: segment.t});
-                        segment.valueX = _this.model.marker.axis_x.getValue({geo: d.geo,time: segment.t});
-                        segment.valueS = _this.model.marker.size.getValue({geo: d.geo,time: segment.t});
-                        segment.valueC = _this.model.marker.color.getValue({geo: d.geo,time: segment.t});
-
-                        if (segment.valueX > maxmin.valueXmax || maxmin.valueXmax == null) maxmin.valueXmax = segment.valueX;
-                        if (segment.valueX < maxmin.valueXmin || maxmin.valueXmin == null) maxmin.valueXmin = segment.valueX;
-                        if (segment.valueY > maxmin.valueYmax || maxmin.valueYmax == null) maxmin.valueYmax = segment.valueY;
-                        if (segment.valueY < maxmin.valueYmin || maxmin.valueYmin == null) maxmin.valueYmin = segment.valueY;
-                        if (segment.valueS > maxmin.valueSmax || maxmin.valueSmax == null) maxmin.valueSmax = segment.valueS;
-
-                        if(index<trailSegmentData.length-1){
-                            var view = d3.select(this);
-                            view.append("circle").style("fill", _this.cScale(segment.valueC));
-                            view.append("line").style("stroke", _this.cScale(segment.valueC));
-                        }
-                    });
-
-
-            });
 
         },
 
 
-        removeTrails: function(selection) {
-            var _this = this;
-            selection = selection == null ? _this.model.entities.select : [selection];
-
-            selection.forEach(function(d) {
-
-                _this.entityTrails
-                    .filter(function(f) {return f.geo == d.geo})
-                    .selectAll("g").remove();
-            });
-        },
-
-
-        revealTrails: function(selection, duration) {
-            var _this = this;
-            if(!this.model.time.trails || !this.model.entities.select.length) return;
-            if(!duration)duration=0;
-
-
-            selection = selection == null ? _this.model.entities.select : [selection];
-            selection.forEach(function(d) {
-                
-                var trailStartTime = _this.timeFormatter.parse("" + d.trailStartTime);
-
-                _this.entityTrails
-                    .filter(function(f) { return f.geo == d.geo })
-                    .selectAll("g")
-                    .each(function(segment, index) {
-
-                        var view = d3.select(this);
-
-                        // segment is transparent if it is after current time or before trail StartTime
-                        var transparent = (segment.t - _this.time >= 0) 
-                            || (trailStartTime - segment.t >  0) 
-                            //no trail segment should be visible if leading bubble is shifted backwards
-                            || (d.trailStartTime - _this.timeFormatter(_this.time) >= 0);
-                        
-                        view.classed("vzb-invisible", transparent);
-
-                        if (transparent) return;
-
-                    
-                        var next = this.parentNode.children[index + 1];
-                        if (next == null) return;
-                        next = next.__data__;
-                    
-                        if (segment.t - _this.time <= 0 && _this.time - next.t <= 0) {
-                            next = _this.cached[d.geo];
-
-                            view.select("line")
-                                .attr("x2", _this.xScale(segment.valueX))
-                                .attr("y2", _this.yScale(segment.valueY))
-                                .attr("x1", _this.xScale(segment.valueX))
-                                .attr("y1", _this.yScale(segment.valueY))
-                                .transition().duration(duration).ease("linear")
-                                .attr("x1", _this.xScale(next.valueX))
-                                .attr("y1", _this.yScale(next.valueY));
-                        }else{
-                            view.select("line")
-                                .attr("x2", _this.xScale(segment.valueX))
-                                .attr("y2", _this.yScale(segment.valueY))
-                                .attr("x1", _this.xScale(next.valueX))
-                                .attr("y1", _this.yScale(next.valueY));
-                        }
-                    })
-            });
-        },
-
-
-        resizeTrails: function(selection, duration) {
-            var _this = this;
-            if(!this.model.time.trails || !this.model.entities.select.length) return;
-            if(!duration)duration=0;
-
-            selection = selection == null ? _this.model.entities.select : [selection];
-            selection.forEach(function(d) {
-                
-                _this.entityTrails
-                    .filter(function(f) { return f.geo == d.geo })
-                    .selectAll("g")
-                    .each(function(segment, index) {
-
-                        var view = d3.select(this);
-
-                        view.select("circle")
-                            .transition().duration(duration).ease("linear")
-                            .attr("cy", _this.yScale(segment.valueY))
-                            .attr("cx", _this.xScale(segment.valueX))
-                            .attr("r", _areaToRadius(_this.sScale(segment.valueS)));
-
-                        var next = this.parentNode.children[index + 1];
-                        if (next == null) return;
-                        next = next.__data__;
-
-                        view.select("line")
-                            .transition().duration(duration).ease("linear")
-                            .attr("x1", _this.xScale(next.valueX))
-                            .attr("y1", _this.yScale(next.valueY))
-                            .attr("x2", _this.xScale(segment.valueX))
-                            .attr("y2", _this.yScale(segment.valueY));
-                    })
-            });
-        },
-
-
-        recolorTrails: function(selection, duration) {
-            var _this = this;
-            if(!this.model.time.trails || !this.model.entities.select.length) return;
-            if(!duration)duration=0;
-
-            selection = selection == null ? _this.model.entities.select : [selection];
-            selection.forEach(function(d) {
-                
-                _this.entityTrails
-                    .filter(function(f) { return f.geo == d.geo })
-                    .selectAll("g")
-                    .each(function(segment, index) {
-
-                        var view = d3.select(this);
-                        view.select("circle")
-                            .transition().duration(duration).ease("linear")
-                            .style("fill", _this.cScale(segment.valueC));
-                        view.select("line")
-                            .transition().duration(duration).ease("linear")
-                            .style("stroke", _this.cScale(segment.valueC));
-                }); 
-            }); 
-        },
-
+        
 
         _setTooltip: function(tooltipText) {
             if (tooltipText) {
@@ -1353,7 +1131,7 @@ define([
             //if(!duration)duration = 0;
             
             var OPACITY_HIGHLT = 1.0;
-            var OPACITY_HIGHLT_DIM = 0.5;
+            var OPACITY_HIGHLT_DIM = 0.3;
             var OPACITY_SELECT = 0.8;
             var OPACITY_REGULAR = 0.8;
             var OPACITY_SELECT_DIM = Math.min(OPACITY_REGULAR, this.model.entities.opacityNonSelected);
@@ -1378,160 +1156,9 @@ define([
                 });
         }
 
-        //        
-        //
-        //        
-        //        
-        //        _collisionResolverStart: function(context){
-        //            var _this = context;
-        //            if(_this.dataForceLayout.links.length==0)return;
-        //        
-        //            _this.entityLabels.each(function(d, index){
-        //                var line = d3.select(this).select("line");
-        //                var text = d3.select(this).select("text");
-        //                var link = _this.dataForceLayout.links[index];
-        //
-        //                link.source.px = +line.attr("x1");
-        //                link.source.py = +line.attr("y1");
-        //                link.target.px = +line.attr("x2");
-        //                link.target.py = +line.attr("y2");
-        //
-        //                link.extension.length = text[0][0].getBBox().width;
-        //                link.extension.px = +line.attr("x2") + link.extension.length;
-        //                link.extension.py = +line.attr("y2");
-        //
-        //            });
-        //        },
-        //        
-        //    
-        //    
-        //    
-        //        _collisionResolverTick: function(context){
-        //            var _this = context;
-        //            
-        //            _this.dataForceLayout.links.forEach(function (d, i) {
-        //                d.extension.x = d.target.x + d.extension.length;
-        //                d.extension.y = d.target.y;
-        //            })
-        //
-        //            _this.dataForceLayout.nodes.forEach(function (d, i) {
-        //                if(d.fixed)return;                        
-        //
-        //                if(d.x<0) d.x++; if(d.x>_this.width) d.x--;
-        //                if(d.y<0) d.y++; if(d.y>_this.height) d.y--;
-        //            })
-        //            
-        //        },
-        //        
-        //        _collisionResolverEnd: function(context){
-        //            var _this = context;
-        //            if(_this.dataForceLayout.links.length==0)return;
-        //                                                
-        //            _this.entityLabels.each(function(d, index){
-        //                var view = d3.select(this);
-        //                var source = _this.dataForceLayout.links[index].source;
-        //                var target = _this.dataForceLayout.links[index].target;
-        //
-        //                var alpha = 0
-        //                    + (target.x > source.x && target.y < source.y?1:0) * ( Math.atan((target.y - source.y)/(source.x - target.x)) )
-        //                    + (target.x == source.x && target.y < source.y?1:0) * ( Math.PI/2 )
-        //                    + (target.x < source.x && target.y < source.y?1:0) * ( Math.PI - Math.atan((target.y - source.y)/(target.x - source.x)) )
-        //                    + (target.x < source.x && target.y == source.y?1:0) * ( Math.PI )
-        //                    + (target.x < source.x && target.y > source.y?1:0) * ( Math.PI + Math.atan((source.y - target.y)/(target.x - source.x)) )
-        //                    + (target.x == source.x && target.y > source.y?1:0) * ( Math.PI/2*3 )
-        //                    + (target.x > source.x && target.y > source.y?1:0) * ( Math.PI*2 - Math.atan((source.y - target.y)/(source.x - target.x)) )
-        //
-        //
-        //
-        //                view.selectAll("text")
-        //                    .style("text-anchor", Math.cos(alpha)>Math.cos(Math.PI/4)?"start" : (Math.cos(alpha)<-Math.cos(Math.PI/4)? "end": "middle"))
-        //                    .style("dominant-baseline", Math.sin(alpha)>Math.sin(Math.PI/4)?"alphabetical" : (Math.sin(alpha)<-Math.sin(Math.PI/4)? "hanging": "middle"))
-        //                    .transition().duration(300)
-        //                    .attr("x", target.x)
-        //                    .attr("y", target.y)
-        //
-        //                view.select("line")
-        //                    .transition().duration(300)
-        //                    .attr("x1", source.x)
-        //                    .attr("y1", source.y)
-        //                    .attr("x2", target.x)
-        //                    .attr("y2", target.y);
-        //
-        //
-        //            });
-        //                
-        //        },
-        //        
-        //        _collisionResolverRebuild: function(selection){
-        //            var _this = this;
-        //            
-        //            //if(_this.forceLayout==null) _this._collisionResolverInit();
-        //            
-        //            this.dataForceLayout = {nodes: [], links: []};
-        //            
-        //            selection.forEach(function(d,i){
-        //                var source = {geo: d, role:_this.ROLE_MARKER, fixed: true};
-        //                var target = {geo: d, role:_this.ROLE_LABEL, fixed: false};
-        //                var extension = {geo: d, role:_this.ROLE_LABEL_EXT, fixed: true};
-        //                _this.dataForceLayout.nodes.push(source);
-        //                _this.dataForceLayout.nodes.push(target);
-        //                _this.dataForceLayout.nodes.push(extension);
-        //                _this.dataForceLayout.links.push({source: source, target: target, extension: extension});
-        //            })
-        //            
-        //            
-        //            this.forceLayout = d3.layout.force()
-        //                .nodes(this.dataForceLayout.nodes)
-        //                .links(this.dataForceLayout.links);
-        //            
-        //            _this.forceLayout.resume();
-        //            while(_this.forceLayout.alpha() > 0.01)_this.forceLayout.tick();
-        //            _this.forceLayout.stop();
-        //        },
-        //        
-        //        
-        //        
-        //        
-        //        
-        //        _collisionResolverInit: function(){
-        //            var _this = this;
-        //            
-        //            this.dataForceLayout = {nodes: [], links: []};
-        //            this.ROLE_MARKER = 'node fixed to marker';
-        //            this.ROLE_LABEL = 'node for floating label';
-        //            this.ROLE_LABEL_EXT = 'node for floating label';
-        //            
-        //            
-        //            this.forceLayout = d3.layout.force()
-        //                .size([_this.width, _this.height])
-        //                .gravity(-0.05)
-        //                .charge(function(d){
-        //                        switch (d.role){
-        //                            case _this.ROLE_MARKER: return -0;
-        //                            case _this.ROLE_LABEL: return -1000;
-        //                            case _this.ROLE_LABEL_EXT: return -1000;
-        //                        }
-        //                    })
-        //                .linkDistance(10)
-        //                //.linkStrength(1)
-        //                //.chargeDistance(30)
-        //                .friction(0.2)
-        //                //.theta(0.8)
-        //                .nodes(this.dataForceLayout.nodes)
-        //                .links(this.dataForceLayout.links)
-        //                .on("start", function(){_this.collisionResolverStart(_this)})
-        //                .on("tick", function(){_this.collisionResolverTick(_this)})
-        //                .on("end", function(){_this.collisionResolverEnd(_this)})
-        //                .start();
-        //
-        //            
-        //        }
-
 
 
     });
-
-
 
     return BubbleChart;
 });
