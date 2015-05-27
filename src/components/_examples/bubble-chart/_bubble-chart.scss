@@ -34,6 +34,7 @@ $vzb-bc-year-size:300px;
         .vzb-bc-entity {
             stroke: white;
             cursor: pointer;
+            pointer-events: visible;
         }
     }
     .vzb-bc-labels .vzb-bc-entity text {

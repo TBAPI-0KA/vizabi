@@ -35,6 +35,9 @@ define([
                 name: "language",
                 type: "language"
             }];
+            
+
+
 
             this.model_binds = {
                 "change:time:trails": function(evt) {
@@ -136,7 +139,7 @@ define([
                     _this.redrawDataPointsOnlyColors();
                     _this.recolorTrails();
                 },
-                'change:entities:opacityNonSelected': function() {
+                'change:entities:opacitySelectDim': function() {
                     _this.updateBubbleOpacity();
                 }
             }
@@ -480,6 +483,10 @@ define([
             this.entityBubbles.enter().append("circle")
                 .attr("class", "vzb-bc-entity")
                 .on("mousemove", function(d, i) {
+                    //if the bubble is transparent, don't do anything
+                    if(_this.someSelected && _this.model.entities.opacitySelectDim<0.01 
+                       &&!_this.model.entities.isSelected(d)) return;
+                
                     _this.model.entities.highlightEntity(d);
 
                     if (_this.model.entities.isSelected(d) && _this.model.time.trails) {
@@ -493,11 +500,19 @@ define([
                     _this._setTooltip(text);
                 })
                 .on("mouseout", function(d, i) {
+                    //if the bubble is transparent, don't do anything
+                    if(_this.someSelected && _this.model.entities.opacitySelectDim<0.01 
+                       &&!_this.model.entities.isSelected(d)) return;
+                
                     _this.model.entities.clearHighlighted();
                     _this._setTooltip();
                     _this.entityLabels.classed("vzb-highlighted", false);
                 })
                 .on("click", function(d, i) {
+                    //if the bubble is transparent, don't do anything
+                    if(_this.someSelected && _this.model.entities.opacitySelectDim<0.01 
+                       &&!_this.model.entities.isSelected(d)) return;
+                
                     _this.model.entities.selectEntity(d, _this.timeFormatter);
                 });
 
@@ -1134,7 +1149,7 @@ define([
             var OPACITY_HIGHLT_DIM = 0.3;
             var OPACITY_SELECT = 0.8;
             var OPACITY_REGULAR = 0.8;
-            var OPACITY_SELECT_DIM = Math.min(OPACITY_REGULAR, this.model.entities.opacityNonSelected);
+            var OPACITY_SELECT_DIM = Math.min(OPACITY_REGULAR, this.model.entities.opacitySelectDim);
                         
             this.entityBubbles
                 //.transition().duration(duration)

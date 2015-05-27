@@ -28,7 +28,7 @@ define([
                 "change:entities:select": function(evt) {
                     _this.updateView();
                 },
-                "change:entities:opacityNonSelected": function(evt) {
+                "change:entities:opacitySelectDim": function(evt) {
                     _this.updateView();
                 }
             }            
@@ -59,7 +59,7 @@ define([
 
         updateView: function () {
             var someSelected = this.model.entities.select.length;
-            var value = this.model.entities.opacityNonSelected;
+            var value = this.model.entities.opacitySelectDim;
             
             this.slider
                 .attr('value', value)
@@ -68,7 +68,7 @@ define([
         },
         
         _setModel: function () {
-            this.model.entities.opacityNonSelected = +d3.event.target.value;
+            this.model.entities.opacitySelectDim = +d3.event.target.value;
         }
     });
 

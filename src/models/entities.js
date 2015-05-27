@@ -18,7 +18,7 @@ define([
                 show: {},
                 select: [],
                 brush: [],
-                opacityNonSelected: 0.3
+                opacitySelectDim: 0.3
             }, values);
 
             this._super(values, parent, bind);
