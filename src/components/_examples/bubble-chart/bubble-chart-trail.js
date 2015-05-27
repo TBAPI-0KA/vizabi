@@ -192,8 +192,8 @@ define([], function(){
                         || (d.trailStartTime - _this.timeFormatter(_this.time) >= 0);
 
                     if(firstVisible && !segment.transparent){
-                        _this.cached[d.geo].valueX0 = segment.valueX;
-                        _this.cached[d.geo].valueY0 = segment.valueY;
+                        _this.cached[d.geo].labelX0 = segment.valueX;
+                        _this.cached[d.geo].labelY0 = segment.valueY;
                         _this.cached[d.geo].scaledS0 = _areaToRadius(_this.sScale(segment.valueS));
                         firstVisible = false;
                     }
