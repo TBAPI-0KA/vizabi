@@ -208,7 +208,7 @@ define([
                     var resolvedX0 = _this.xScale(cache.labelX0);
                     var resolvedY0 = _this.yScale(cache.labelY0);
 
-                    _this._repositionLabels(d, i, this, resolvedX, resolvedY, resolvedX0, resolvedY0, _this.duration);
+                    _this._repositionLabels(d, i, this, resolvedX, resolvedY, resolvedX0, resolvedY0, 0);
                 })
                 .on("dragend", function(d, i) {
                     _this.model.entities.setLabelOffset(d, [
@@ -412,7 +412,6 @@ define([
             var _this = this;
 
             this.translator = this.model.language.getTFunction();
-            this.duration = this.model.time.speed;
             this.timeFormatter = d3.time.format(_this.model.time.formatInput);
 
             var titleStringY = this.translator("indicator/" + this.model.marker.axis_y.value);
