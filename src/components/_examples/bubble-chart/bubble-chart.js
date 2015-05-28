@@ -137,7 +137,7 @@ define([
                 'change:marker:color:palette': function() {
                     //console.log("EVENT change:marker:color:palette");
                     _this.redrawDataPointsOnlyColors();
-                    _this.recolorTrails();
+                    _this._trails.run("recolor");
                 },
                 'change:entities:opacitySelectDim': function() {
                     _this.updateBubbleOpacity();
