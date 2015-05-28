@@ -141,6 +141,9 @@ define([
                 },
                 'change:entities:opacitySelectDim': function() {
                     _this.updateBubbleOpacity();
+                },
+                'change:entities:opacityRegular': function() {
+                    _this.updateBubbleOpacity();
                 }
             }
 
@@ -483,9 +486,6 @@ define([
             this.entityBubbles.enter().append("circle")
                 .attr("class", "vzb-bc-entity")
                 .on("mousemove", function(d, i) {
-                    //if the bubble is transparent, don't do anything
-                    if(_this.someSelected && _this.model.entities.opacitySelectDim<0.01 
-                       &&!_this.model.entities.isSelected(d)) return;
                 
                     _this.model.entities.highlightEntity(d);
 
@@ -500,18 +500,12 @@ define([
                     _this._setTooltip(text);
                 })
                 .on("mouseout", function(d, i) {
-                    //if the bubble is transparent, don't do anything
-                    if(_this.someSelected && _this.model.entities.opacitySelectDim<0.01 
-                       &&!_this.model.entities.isSelected(d)) return;
                 
                     _this.model.entities.clearHighlighted();
                     _this._setTooltip();
                     _this.entityLabels.classed("vzb-highlighted", false);
                 })
                 .on("click", function(d, i) {
-                    //if the bubble is transparent, don't do anything
-                    if(_this.someSelected && _this.model.entities.opacitySelectDim<0.01 
-                       &&!_this.model.entities.isSelected(d)) return;
                 
                     _this.model.entities.selectEntity(d, _this.timeFormatter);
                 });
@@ -1148,8 +1142,8 @@ define([
             var OPACITY_HIGHLT = 1.0;
             var OPACITY_HIGHLT_DIM = 0.3;
             var OPACITY_SELECT = 0.8;
-            var OPACITY_REGULAR = 0.8;
-            var OPACITY_SELECT_DIM = Math.min(OPACITY_REGULAR, this.model.entities.opacitySelectDim);
+            var OPACITY_REGULAR = this.model.entities.opacityRegular;
+            var OPACITY_SELECT_DIM = this.model.entities.opacitySelectDim;
                         
             this.entityBubbles
                 //.transition().duration(duration)
@@ -1169,6 +1163,19 @@ define([
                 
                     return OPACITY_REGULAR;
                 });
+            
+            
+            var someSelectedAndOpacityZero = _this.someSelected && _this.model.entities.opacitySelectDim<0.01;
+            
+            // when pointer events need update...
+            if(someSelectedAndOpacityZero != this.someSelectedAndOpacityZero_1){
+                this.entityBubbles.style("pointer-events", function(d){
+                    return (!someSelectedAndOpacityZero || _this.model.entities.isSelected(d))?
+                        "visible":"none";
+                });
+            }
+            
+            this.someSelectedAndOpacityZero_1 = _this.someSelected && _this.model.entities.opacitySelectDim<0.01;
         }
 
 

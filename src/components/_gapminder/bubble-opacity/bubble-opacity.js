@@ -24,14 +24,18 @@ define([
             
             var _this = this;
             
+            this.arg = config.arg;
+            
             this.model_binds = {
                 "change:entities:select": function(evt) {
                     _this.updateView();
-                },
-                "change:entities:opacitySelectDim": function(evt) {
+                }
+            }    
+            this.model_binds["change:entities:" + this.arg] = function(evt) {
                     _this.updateView();
                 }
-            }            
+            
+            
 
             //contructor is the same as any component
             this._super(config, context);
@@ -59,16 +63,15 @@ define([
 
         updateView: function () {
             var someSelected = this.model.entities.select.length;
-            var value = this.model.entities.opacitySelectDim;
+            var value = this.model.entities[this.arg];
             
-            this.slider
-                .attr('value', value)
-                .attr('disabled', someSelected?null:true);
-            this.element.classed('vzb-disabled', someSelected?false:true);
+            this.slider.attr('value', value);
+//                .attr('disabled', someSelected?null:true);
+//            this.element.classed('vzb-disabled', someSelected?false:true);
         },
         
         _setModel: function () {
-            this.model.entities.opacitySelectDim = +d3.event.target.value;
+            this.model.entities[this.arg] = +d3.event.target.value;
         }
     });
 

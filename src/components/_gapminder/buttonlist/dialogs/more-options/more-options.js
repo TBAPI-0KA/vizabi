@@ -47,8 +47,14 @@ define([
                 model: ["state.marker.color", "state.entities", "language"]
             },{
                 component: '_gapminder/bubble-opacity',
-                placeholder: '.vzb-dialog-bubble-opacity',
-                model: ["state.entities"]
+                placeholder: '.vzb-dialog-bubble-opacity-regular',
+                model: ["state.entities"],
+                arg: "opacityRegular"
+            },{
+                component: '_gapminder/bubble-opacity',
+                placeholder: '.vzb-dialog-bubble-opacity-selectdim',
+                model: ["state.entities"],
+                arg: "opacitySelectDim"
             }];
             
             this._super(config, parent);
