@@ -64,7 +64,7 @@ define([
                                             _type_: "object",
                                             _defs_: {
                                                 "geo": ["*"],
-                                                "geo.category": ["region"]
+                                                "geo.cat": ["region"]
                                             }
                                         }
                                     }
@@ -158,9 +158,17 @@ define([
                 data: {
                     _type_: "model",
                     _defs_: {
+//                        reader: {
+//                            _type_: "string",
+//                            _defs_: "waffle-server"
+//                        }
                         reader: {
                             _type_: "string",
-                            _defs_: "waffle-server"
+                            _defs_: "local-json"
+                        },
+                        path: {
+                            _type_: "string",
+                            _defs_: "local_data/waffles/{{LANGUAGE}}/basic-indicators.json"
                         }
                     }
                 },
